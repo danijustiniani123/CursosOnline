@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Panel de Administrador</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <h1>🎓 Panel de Administración</h1>
+
+  <section>
+    <h2>👥 Crear cuenta de usuario</h2>
+    <input type="email" id="nuevo-email" placeholder="Correo del usuario" />
+    <input type="text" id="nuevo-dni" placeholder="DNI (será la contraseña inicial)" />
+    <select id="rol">
+      <option value="trabajador">Trabajador</option>
+      <option value="admin">Administrador</option>
+    </select>
+    <button onclick="crearUsuario()">Crear usuario</button>
+  </section>
+
+  <hr>
+
+  <section>
+    <h2>📚 Subir nuevo curso</h2>
+    <input type="text" id="titulo-curso" placeholder="Nombre del curso" />
+    <input type="text" id="url-video" placeholder="URL del video (YouTube)" />
+    <input type="text" id="url-material" placeholder="URL del material (PDF, PPT, etc.)" />
+    <button onclick="subirCurso()">Subir curso</button>
+  </section>
+
+  <hr>
+
+  <section>
+    <h2>📋 Ver registros</h2>
+    <button onclick="cargarRegistros()">Mostrar registros</button>
+    <table border="1" id="tabla-registros">
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Curso</th>
+          <th>Nota</th>
+          <th>Fecha</th>
+          <th>Certificado</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <hr>
+
+  <section>
+    <h2>🔐 Resetear contraseña</h2>
+    <input type="email" id="email-reset" placeholder="Correo del usuario" />
+    <button onclick="resetearContrasena()">Enviar enlace de reseteo</button>
+  </section>
+
+  <script type="module" src="admin.js"></script>
+</body>
+</html>

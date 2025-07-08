@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cambiar Contraseña</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      margin: 0;
+      background-color: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background-color: #fff;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 400px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      font-size: 1rem;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background-color: #007BFF;
+      color: white;
+      border: none;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    @media (max-width: 400px) {
+      .container {
+        padding: 1.5rem 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>🔐 Cambiar Contraseña</h2>
+    <p>Ingresa tu nueva contraseña</p>
+    <input type="password" id="new-password" placeholder="Nueva contraseña" />
+    <button onclick="actualizarClave()">Actualizar</button>
+  </div>
+
+  <script type="module">
+    import { supabase } from './supabaseClient.js';
+
+    async function actualizarClave() {
+      const nuevaClave = document.getElementById("new-password").value;
+
+      if (!nuevaClave || nuevaClave.length < 6) {
+        alert("⚠️ La contraseña debe tener al menos 6 caracteres.");
+        return;
+      }
+
+      const { error } = await supabase.auth.updateUser({
+        password: nuevaClave,
+      });
+
+      if (error) {
+        alert("❌ Error: " + error.message);
+      } else {
+        alert("✅ Contraseña actualizada. Puedes iniciar sesión.");
+        window.location.href = "index.html";
+      }
+    }
+
+    window.actualizarClave = actualizarClave;
+  </script>
+</body>
+</html>

@@ -1,0 +1,117 @@
+:root {
+  --azul: #003366;
+  --azul-hover: #00529b;
+  --gris: #6c757d;
+  --fondo: #f5f7fa;
+  --blanco: #ffffff;
+  --borde: #d9d9d9;
+  --sombra: rgba(0, 0, 0, 0.05);
+}
+
+/* ======= RESETEO BÁSICO ======= */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 40px 20px;
+  font-family: "Segoe UI", Roboto, sans-serif;
+  background-color: var(--fondo);
+  color: var(--azul);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ======= CONTENEDORES ======= */
+section, #admin-panel {
+  background-color: var(--blanco);
+  padding: 30px;
+  margin: 20px 0;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px var(--sombra);
+  width: 100%;
+  max-width: 800px;
+}
+
+/* ======= TITULOS ======= */
+h2, h3 {
+  margin-bottom: 20px;
+  color: var(--azul);
+}
+
+/* ======= INPUTS Y BOTONES ======= */
+input[type="email"],
+input[type="password"],
+input[type="number"] {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 16px;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  background-color: var(--azul);
+  color: var(--blanco);
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-top: 10px;
+}
+
+button:hover {
+  background-color: var(--azul-hover);
+}
+
+/* ======= LISTADO DE CURSOS ======= */
+#lista-cursos button {
+  background-color: #e6ecf2;
+  border: 1px solid #cbd6e2;
+  text-align: left;
+  color: #003366;
+  font-weight: bold;
+}
+
+/* ======= LINK DE MATERIAL ======= */
+#link-material {
+  color: var(--azul-hover);
+  font-weight: bold;
+  text-decoration: none;
+}
+
+#link-material:hover {
+  text-decoration: underline;
+}
+
+/* ======= SECCIÓN CERTIFICADO ======= */
+#certificado-section {
+  margin-top: 30px;
+  background-color: #eaf3ff;
+  padding: 20px;
+  border-left: 4px solid var(--azul);
+  border-radius: 8px;
+  color: var(--azul);
+  font-weight: bold;
+  text-align: center;
+}
+
+#admin-panel {
+  margin-top: 2rem;
+  background: #fff;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.admin-box {
+  border-top: 1px solid #ccc;
+  padding-top: 1rem;
+  margin-top: 1rem;
+}
