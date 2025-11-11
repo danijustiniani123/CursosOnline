@@ -145,7 +145,7 @@ async function mostrarPasoActual() {
         tituloPaso = '📚 Material del Curso';
         const urlMaterialEmbed = obtenerURLparaIframe(cursoSeleccionado.url_material);
         contenidoHTML = `
-          <iframe src="${urlMaterialEmbed}" width="100%" height="600px" style="border:none; border-radius:8px;"></iframe>
+          https://view.officeapps.live.com/op/embed.aspx?src=https://onedrive.live.com/download?resid=8141EC567669FB9F!EWFYYruv0MNAsPuj7cf7SBQBz-yfqPEqsfnMwH3vEXIEog
           <p style="text-align:center; margin-top:10px;">
             <a href="${cursoSeleccionado.url_material}" target="_blank" style="color:#007bff; text-decoration:none;">🔗 Abrir PDF en nueva pestaña</a>
           </p>
