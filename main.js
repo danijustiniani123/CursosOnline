@@ -65,19 +65,6 @@ class Utilidades {
     static obtenerTituloPaso(paso) {
         return CONFIG.titulosPasos[paso] || 'Paso del Curso';
     }
-
-    static crearElemento(tag, atributos = {}, contenido = '') {
-        const elemento = document.createElement(tag);
-        Object.keys(atributos).forEach(key => {
-            if (key === 'style') {
-                Object.assign(elemento.style, atributos[key]);
-            } else {
-                elemento[key] = atributos[key];
-            }
-        });
-        if (contenido) elemento.innerHTML = contenido;
-        return elemento;
-    }
 }
 
 // 🎯 CONTROLADOR DE NAVEGACIÓN
@@ -114,10 +101,10 @@ class CursoController {
 
         elementos.listaCursos.innerHTML = '';
         cursos.forEach(curso => {
-            const btn = Utilidades.createElement('button', {
-                className: 'btn-curso',
-                onclick: () => CursoController.mostrarCurso(curso)
-            }, curso.nombre);
+            const btn = document.createElement('button');
+            btn.textContent = curso.nombre;
+            btn.className = 'btn-curso';
+            btn.onclick = () => CursoController.mostrarCurso(curso);
             elementos.listaCursos.appendChild(btn);
         });
     }
@@ -158,127 +145,148 @@ class CursoController {
 
     static async mostrarPasoActual() {
         const paso = CONFIG.pasosCurso[estado.pasoActual];
-        const tieneContenido = estado.cursoSeleccionado[`url_${paso}`]?.trim() !== '';
+        const tieneContenido = estado.cursoSeleccionado[`url_${paso}`] && estado.cursoSeleccionado[`url_${paso}`].trim() !== '';
         
-        const contenidoHTML = tieneContenido 
-            ? this.generarContenidoPaso(paso)
-            : this.generarPasoNoDisponible(paso);
-
-        const navegacionHTML = this.generarNavegacion();
+        let contenidoHTML = '';
+        let tituloPaso = '';
+        
+        if (tieneContenido) {
+            switch(paso) {
+                case 'material':
+                    tituloPaso = '📚 Material del Curso';
+                    const urlMaterialEmbed = Utilidades.obtenerURLparaIframe(estado.cursoSeleccionado.url_material);
+                    contenidoHTML = `
+                        <iframe 
+                            src="${urlMaterialEmbed}" 
+                            width="100%" 
+                            height="600px" 
+                            style="border:none; border-radius:8px;">
+                        </iframe>
+                        <p style="text-align:center; margin-top:10px;">
+                            <a href="${estado.cursoSeleccionado.url_material}" target="_blank" style="color:#007bff; text-decoration:none;">
+                                🔗 Abrir PDF en nueva pestaña
+                            </a>
+                        </p>
+                    `;
+                    break;
+                    
+                case 'video':
+                    tituloPaso = '🎥 Video del Curso';
+                    if (estado.cursoSeleccionado.url_video.includes("youtube") || estado.cursoSeleccionado.url_video.includes("youtu.be")) {
+                        const videoUrl = estado.cursoSeleccionado.url_video.replace("watch?v=", "embed/").replace("youtu.be/", "youtube.com/embed/");
+                        contenidoHTML = `
+                            <iframe 
+                                width="100%" 
+                                height="400" 
+                                src="${videoUrl}" 
+                                frameborder="0" 
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                allowfullscreen 
+                                style="border-radius:8px;">
+                            </iframe>
+                        `;
+                    } else {
+                        const videoUrlEmbed = Utilidades.obtenerURLparaIframe(estado.cursoSeleccionado.url_video);
+                        contenidoHTML = `
+                            <video width="100%" height="400" controls style="border-radius:8px;">
+                                <source src="${videoUrlEmbed}" type="video/mp4">
+                                Tu navegador no soporta el elemento video.
+                            </video>
+                        `;
+                    }
+                    break;
+                    
+                case 'asistencia':
+                case 'encuesta':
+                case 'examen':
+                case 'eficacia':
+                    tituloPaso = Utilidades.obtenerTituloPaso(paso);
+                    const urlPasoEmbed = Utilidades.obtenerURLparaIframe(estado.cursoSeleccionado[`url_${paso}`]);
+                    contenidoHTML = `
+                        <iframe 
+                            src="${urlPasoEmbed}" 
+                            width="100%" 
+                            height="600px" 
+                            style="border:none; border-radius:8px;">
+                        </iframe>
+                        <p style="text-align:center; margin-top:10px;">
+                            <a href="${estado.cursoSeleccionado[`url_${paso}`]}" target="_blank" style="color:#007bff; text-decoration:none;">
+                                🔗 Abrir formulario en nueva pestaña
+                            </a>
+                            <br>
+                            <small style="color:#dc3545; font-weight:bold;">
+                                ⚠️ Completa este formulario antes de continuar
+                            </small>
+                        </p>
+                    `;
+                    break;
+            }
+        } else {
+            tituloPaso = Utilidades.obtenerTituloPaso(paso);
+            contenidoHTML = `
+                <div style="text-align:center; padding:40px; color:#666;">
+                    <p>❌ ${tituloPaso} no disponible</p>
+                    <p><small>Este contenido no está disponible para este curso.</small></p>
+                </div>
+            `;
+        }
+        
+        // 🎯 NAVEGACIÓN CON BOTÓN "SIGUIENTE" SIEMPRE ACTIVO
+        const navegacionHTML = `
+            <div style="margin:30px 0; display:flex; justify-content:space-between; align-items:center;">
+                <!-- BOTÓN ANTERIOR -->
+                <button 
+                    onclick="pasoAnterior()" 
+                    style="
+                        padding:10px 20px; 
+                        background:${estado.pasoActual === 0 ? '#ccc' : '#007bff'}; 
+                        color:white; 
+                        border:none; 
+                        border-radius:5px; 
+                        cursor:${estado.pasoActual === 0 ? 'not-allowed' : 'pointer'};
+                        font-weight:bold;
+                    " 
+                    ${estado.pasoActual === 0 ? 'disabled' : ''}>
+                    ← Anterior
+                </button>
+                
+                <!-- INFORMACIÓN DEL PASO -->
+                <div style="text-align:center;">
+                    <div style="font-weight:bold; color:#002855; font-size:1.1rem;">${tituloPaso}</div>
+                    <div style="color:#666; font-size:0.9rem; margin-top:5px;">
+                        Paso ${estado.pasoActual + 1} de ${CONFIG.pasosCurso.length}
+                    </div>
+                </div>
+                
+                <!-- BOTÓN SIGUIENTE - SIEMPRE ACTIVO -->
+                <button 
+                    onclick="siguientePaso()" 
+                    style="
+                        padding:10px 20px; 
+                        background:#28a745; 
+                        color:white; 
+                        border:none; 
+                        border-radius:5px; 
+                        cursor:pointer;
+                        font-weight:bold;
+                    ">
+                    ${estado.pasoActual === CONFIG.pasosCurso.length - 1 ? '🎓 Finalizar' : 'Siguiente →'}
+                </button>
+            </div>
+        `;
 
         elementos.videoCurso.innerHTML = `
-            <div class="contenedor-paso">
+            <div style="background:white; padding:20px; border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,0.1);">
                 ${navegacionHTML}
-                <div class="contenido-paso">
+                <div style="margin:20px 0;">
                     ${contenidoHTML}
                 </div>
                 ${navegacionHTML}
             </div>
         `;
-    }
 
-    static generarContenidoPaso(paso) {
-        const url = estado.cursoSeleccionado[`url_${paso}`];
-        const urlEmbed = Utilidades.obtenerURLparaIframe(url);
-
-        switch(paso) {
-            case 'material':
-                return `
-                    <iframe 
-                        src="${urlEmbed}" 
-                        width="100%" 
-                        height="600px" 
-                        class="iframe-contenido">
-                    </iframe>
-                    <div class="enlace-externo">
-                        <a href="${url}" target="_blank">
-                            🔗 Abrir PDF en nueva pestaña
-                        </a>
-                    </div>
-                `;
-                
-            case 'video':
-                if (url.includes("youtube") || url.includes("youtu.be")) {
-                    const videoUrl = url.replace("watch?v=", "embed/").replace("youtu.be/", "youtube.com/embed/");
-                    return `
-                        <iframe 
-                            width="100%" 
-                            height="400" 
-                            src="${videoUrl}" 
-                            frameborder="0" 
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                            allowfullscreen 
-                            class="video-iframe">
-                        </iframe>
-                    `;
-                } else {
-                    return `
-                        <video width="100%" height="400" controls class="video-elemento">
-                            <source src="${urlEmbed}" type="video/mp4">
-                            Tu navegador no soporta el elemento video.
-                        </video>
-                    `;
-                }
-                
-            default:
-                return `
-                    <iframe 
-                        src="${urlEmbed}" 
-                        width="100%" 
-                        height="600px" 
-                        class="iframe-contenido">
-                    </iframe>
-                    <div class="enlace-externo">
-                        <a href="${url}" target="_blank">
-                            🔗 Abrir formulario en nueva pestaña
-                        </a>
-                        <br>
-                        <small class="advertencia-formulario">
-                            ⚠️ Completa este formulario antes de continuar
-                        </small>
-                    </div>
-                `;
-        }
-    }
-
-    static generarPasoNoDisponible(paso) {
-        const tituloPaso = Utilidades.obtenerTituloPaso(paso);
-        return `
-            <div class="paso-no-disponible">
-                <p>❌ ${tituloPaso} no disponible</p>
-                <p><small>Este contenido no está disponible para este curso.</small></p>
-            </div>
-        `;
-    }
-
-    static generarNavegacion() {
-        const tituloPaso = Utilidades.obtenerTituloPaso(CONFIG.pasosCurso[estado.pasoActual]);
-        const esPrimerPaso = estado.pasoActual === 0;
-        const esUltimoPaso = estado.pasoActual === CONFIG.pasosCurso.length - 1;
-
-        return `
-            <div class="paso-navegacion">
-                <button 
-                    onclick="NavegacionController.pasoAnterior()" 
-                    class="btn-navegacion btn-anterior"
-                    ${esPrimerPaso ? 'disabled' : ''}>
-                    ← Anterior
-                </button>
-                
-                <div class="info-paso">
-                    <div class="titulo-paso">${tituloPaso}</div>
-                    <div class="contador-paso">
-                        Paso ${estado.pasoActual + 1} de ${CONFIG.pasosCurso.length}
-                    </div>
-                </div>
-                
-                <button 
-                    onclick="NavegacionController.siguientePaso()" 
-                    class="btn-navegacion btn-siguiente">
-                    ${esUltimoPaso ? '🎓 Finalizar' : 'Siguiente →'}
-                </button>
-            </div>
-        `;
+        // Mostrar sección de nota solo en el último paso
+        elementos.seccionNota.style.display = estado.pasoActual === CONFIG.pasosCurso.length - 1 ? 'block' : 'none';
     }
 
     static mostrarSeccionNota() {
@@ -290,8 +298,8 @@ class CursoController {
 
     static volverACursos() {
         elementos.cursoSection.style.display = 'none';
-        elementos.certificadoSection.style.display = 'none';
         elementos.cursosDisponiblesSection.style.display = 'block';
+        elementos.certificadoSection.style.display = 'none';
         elementos.seccionNota.style.display = 'none';
         estado.pasoActual = 0;
     }
@@ -394,11 +402,19 @@ class CertificadoController {
     }
 }
 
+// 🎯 FUNCIONES GLOBALES SIMPLES PARA NAVEGACIÓN
+function pasoAnterior() {
+    NavegacionController.pasoAnterior();
+}
+
+function siguientePaso() {
+    NavegacionController.siguientePaso();
+}
+
 // 🎯 INICIALIZACIÓN Y EXPORTACIÓN GLOBAL
 window.login = AuthController.login;
 window.volverACursos = CursoController.volverACursos;
 window.enviarNota = CertificadoController.enviarNota;
 window.generarCertificado = CertificadoController.generarCertificado;
-
-// ✅ EXPORTAR CONTROLADORES DE NAVEGACIÓN (IMPORTANTE)
-window.NavegacionController = NavegacionController;
+window.pasoAnterior = pasoAnterior;
+window.siguientePaso = siguientePaso;
