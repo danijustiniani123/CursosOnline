@@ -111,6 +111,9 @@ async function mostrarCurso(curso) {
   cursosDisponiblesSection.style.display = 'none';
   certificadoSection.style.display = 'none';
 
+  // Ocultar sección de nota al inicio
+  document.getElementById('seccion-nota').style.display = 'none';
+
   // Registrar asistencia automáticamente
   const { data: userData } = await supabase.auth.getUser();
   const user = userData?.user;
@@ -142,32 +145,37 @@ async function mostrarPasoActual() {
   if (tieneContenido) {
     switch(paso) {
       case 'material':
-  tituloPaso = '📚 Material del Curso';
-  // ✅ Generar el enlace de vista correcta para OneDrive o Google Drive
-  const urlMaterialEmbed = obtenerURLparaIframe(cursoSeleccionado.url_material);
-
-  contenidoHTML = `
-    <iframe 
-      src="${urlMaterialEmbed}" 
-      width="100%" 
-      height="600px" 
-      style="border:none; border-radius:8px;">
-    </iframe>
-    <p style="text-align:center; margin-top:10px;">
-      <a href="${cursoSeleccionado.url_material}" target="_blank" style="color:#007bff; text-decoration:none;">
-        🔗 Abrir PDF en nueva pestaña
-      </a>
-    </p>
-  `;
-  break;
+        tituloPaso = '📚 Material del Curso';
+        const urlMaterialEmbed = obtenerURLparaIframe(cursoSeleccionado.url_material);
+        contenidoHTML = `
+          <iframe 
+            src="${urlMaterialEmbed}" 
+            width="100%" 
+            height="600px" 
+            style="border:none; border-radius:8px;">
+          </iframe>
+          <p style="text-align:center; margin-top:10px;">
+            <a href="${cursoSeleccionado.url_material}" target="_blank" style="color:#007bff; text-decoration:none;">
+              🔗 Abrir PDF en nueva pestaña
+            </a>
+          </p>
+        `;
+        break;
+        
       case 'video':
         tituloPaso = '🎥 Video del Curso';
         if (cursoSeleccionado.url_video.includes("youtube") || cursoSeleccionado.url_video.includes("youtu.be")) {
           const videoUrl = cursoSeleccionado.url_video.replace("watch?v=", "embed/").replace("youtu.be/", "youtube.com/embed/");
           contenidoHTML = `
-            <iframe width="100%" height="400" src="${videoUrl}" frameborder="0" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowfullscreen style="border-radius:8px;"></iframe>
+            <iframe 
+              width="100%" 
+              height="400" 
+              src="${videoUrl}" 
+              frameborder="0" 
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+              allowfullscreen 
+              style="border-radius:8px;">
+            </iframe>
           `;
         } else {
           const videoUrlEmbed = obtenerURLparaIframe(cursoSeleccionado.url_video);
@@ -179,6 +187,7 @@ async function mostrarPasoActual() {
           `;
         }
         break;
+        
       case 'asistencia':
       case 'encuesta':
       case 'examen':
@@ -186,45 +195,93 @@ async function mostrarPasoActual() {
         tituloPaso = obtenerTituloPaso(paso);
         const urlPasoEmbed = obtenerURLparaIframe(cursoSeleccionado[`url_${paso}`]);
         contenidoHTML = `
-          <iframe src="${urlPasoEmbed}" width="100%" height="600px" style="border:none; border-radius:8px;"></iframe>
+          <iframe 
+            src="${urlPasoEmbed}" 
+            width="100%" 
+            height="600px" 
+            style="border:none; border-radius:8px;">
+          </iframe>
           <p style="text-align:center; margin-top:10px;">
-            <a href="${cursoSeleccionado[`url_${paso}`]}" target="_blank" style="color:#007bff; text-decoration:none;">🔗 Abrir formulario en nueva pestaña</a>
+            <a href="${cursoSeleccionado[`url_${paso}`]}" target="_blank" style="color:#007bff; text-decoration:none;">
+              🔗 Abrir formulario en nueva pestaña
+            </a>
+            <br>
+            <small style="color:#dc3545; font-weight:bold;">
+              ⚠️ Completa este formulario antes de continuar
+            </small>
           </p>
         `;
         break;
     }
   } else {
     tituloPaso = obtenerTituloPaso(paso);
-    contenidoHTML = `<div style="text-align:center; padding:40px; color:#666;">
-      <p>❌ ${tituloPaso} no disponible</p>
-      <p><small>Este contenido no está disponible para este curso.</small></p>
-    </div>`;
+    contenidoHTML = `
+      <div style="text-align:center; padding:40px; color:#666;">
+        <p>❌ ${tituloPaso} no disponible</p>
+        <p><small>Este contenido no está disponible para este curso.</small></p>
+      </div>
+    `;
   }
   
+  // 🎯 NAVEGACIÓN CON BOTÓN "SIGUIENTE" SIEMPRE ACTIVO
   const navegacionHTML = `
     <div style="margin:30px 0; display:flex; justify-content:space-between; align-items:center;">
-      <button onclick="pasoAnterior()" style="padding:10px 20px; background:${pasoActual===0?'#ccc':'#007bff'}; color:white; border:none; border-radius:5px; cursor:${pasoActual===0?'not-allowed':'pointer'};" ${pasoActual===0?'disabled':''}>← Anterior</button>
+      <!-- BOTÓN ANTERIOR -->
+      <button 
+        onclick="pasoAnterior()" 
+        style="
+          padding:10px 20px; 
+          background:${pasoActual === 0 ? '#ccc' : '#007bff'}; 
+          color:white; 
+          border:none; 
+          border-radius:5px; 
+          cursor:${pasoActual === 0 ? 'not-allowed' : 'pointer'};
+          font-weight:bold;
+        " 
+        ${pasoActual === 0 ? 'disabled' : ''}>
+        ← Anterior
+      </button>
+      
+      <!-- INFORMACIÓN DEL PASO -->
       <div style="text-align:center;">
-        <div style="font-weight:bold; color:#002855;">${tituloPaso}</div>
-        <div style="color:#666; font-size:0.9rem;">Paso ${pasoActual+1} de ${pasosCurso.length}</div>
+        <div style="font-weight:bold; color:#002855; font-size:1.1rem;">${tituloPaso}</div>
+        <div style="color:#666; font-size:0.9rem; margin-top:5px;">
+          Paso ${pasoActual + 1} de ${pasosCurso.length}
+        </div>
       </div>
-      <button onclick="siguientePaso()" style="padding:10px 20px; background:${pasoActual===pasosCurso.length-1?'#ccc':'#28a745'}; color:white; border:none; border-radius:5px; cursor:${pasoActual===pasosCurso.length-1?'not-allowed':'pointer'};" ${pasoActual===pasosCurso.length-1?'disabled':''}>${pasoActual===pasosCurso.length-1?'Finalizado':'Siguiente →'}</button>
+      
+      <!-- BOTÓN SIGUIENTE - SIEMPRE ACTIVO -->
+      <button 
+        onclick="siguientePaso()" 
+        style="
+          padding:10px 20px; 
+          background:#28a745; 
+          color:white; 
+          border:none; 
+          border-radius:5px; 
+          cursor:pointer;
+          font-weight:bold;
+        ">
+        ${pasoActual === pasosCurso.length - 1 ? '🎓 Finalizar' : 'Siguiente →'}
+      </button>
     </div>
   `;
 
   videoCurso.innerHTML = `
     <div style="background:white; padding:20px; border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,0.1);">
       ${navegacionHTML}
-      <div style="margin:20px 0;">${contenidoHTML}</div>
+      <div style="margin:20px 0;">
+        ${contenidoHTML}
+      </div>
       ${navegacionHTML}
     </div>
   `;
 
-  document.querySelector('#curso-section h3').style.display = pasoActual === pasosCurso.length - 1 ? 'block' : 'none';
-  document.querySelector('#curso-section input[type="number"]').style.display = pasoActual === pasosCurso.length - 1 ? 'block' : 'none';
-  document.querySelector('#curso-section button[onclick="enviarNota()"]').style.display = pasoActual === pasosCurso.length - 1 ? 'block' : 'none';
+  // Mostrar sección de nota solo en el último paso
+  document.getElementById('seccion-nota').style.display = pasoActual === pasosCurso.length - 1 ? 'block' : 'none';
 }
 
+// 🧭 FUNCIONES DE NAVEGACIÓN
 function pasoAnterior() {
   if (pasoActual > 0) {
     pasoActual--;
@@ -236,13 +293,22 @@ function siguientePaso() {
   if (pasoActual < pasosCurso.length - 1) {
     pasoActual++;
     mostrarPasoActual();
+  } else {
+    // Si es el último paso, mostrar sección de nota
+    document.getElementById('seccion-nota').style.display = 'block';
+    
+    // Scroll suave a la sección de nota
+    document.getElementById('seccion-nota').scrollIntoView({ 
+      behavior: 'smooth' 
+    });
   }
 }
 
+// 📝 HELPER PARA TÍTULOS DE PASOS
 function obtenerTituloPaso(paso) {
   const titulos = {
     'material': 'Material del Curso',
-    'video': 'Video del Curso',
+    'video': 'Video del Curso', 
     'asistencia': 'Registro de Asistencia',
     'encuesta': 'Encuesta de Satisfacción',
     'examen': 'Examen del Curso',
@@ -251,13 +317,17 @@ function obtenerTituloPaso(paso) {
   return titulos[paso];
 }
 
+// 🔄 VOLVER A CURSOS
 function volverACursos() {
   cursoSection.style.display = 'none';
   cursosDisponiblesSection.style.display = 'block';
+  certificadoSection.style.display = 'none';
   pasoActual = 0;
 }
+
 window.volverACursos = volverACursos;
 
+// 📊 ENVIAR NOTA
 async function enviarNota() {
   const nota = parseFloat(document.getElementById('nota').value);
   const { data: userData } = await supabase.auth.getUser();
@@ -278,9 +348,19 @@ async function enviarNota() {
     return;
   }
 
+  console.log("Insertando en notas:", {
+    correo: user.email,
+    nota: nota,
+    id_curso: cursoSeleccionado.id
+  });
+
   const { error } = await supabase
     .from('notas')
-    .insert([{ correo: user.email, nota: nota, id_curso: cursoSeleccionado.id }]);
+    .insert([{
+      correo: user.email,
+      nota: nota,
+      id_curso: cursoSeleccionado.id
+    }]);
 
   if (error) {
     alert("❌ Error al guardar nota: " + error.message);
@@ -290,20 +370,31 @@ async function enviarNota() {
   if (nota >= 14) {
     certificadoSection.style.display = 'block';
     alert("✅ ¡Felicidades! Has aprobado el curso.");
+    
+    // Scroll suave al certificado
+    certificadoSection.scrollIntoView({ 
+      behavior: 'smooth' 
+    });
   } else {
     alert("❌ Nota insuficiente para aprobar. Puedes intentarlo nuevamente.");
   }
 }
+
 window.enviarNota = enviarNota;
 
+// 🎓 GENERAR CERTIFICADO
 async function generarCertificado() {
   const { data: userData } = await supabase.auth.getUser();
   const user = userData?.user;
+
   if (!user || !cursoSeleccionado) {
     alert("❌ Usuario o curso no válido");
     return;
   }
+
   const nota = parseFloat(document.getElementById('nota').value);
+
   await generarCertificadoPDF(cursoSeleccionado, nota);
 }
+
 window.generarCertificado = generarCertificado;
